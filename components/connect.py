@@ -1,6 +1,7 @@
 import requests
 import json
 import websocket
+import components.message_handler as handler
 
 api_url = 'https://web.fightcade.com/api/'
 ws_url = 'wss://ggs.fightcade.com/ws/'
@@ -25,15 +26,17 @@ ws_headers = {
     'User-Agent': data['fightcade_version']
 }
 
-def connect():
-    ws = websocket.WebSocket()
-    ws.connect(ws_url, header=ws_headers, host='ggs.fightcade.com', origin='https://web.fightcade.com')
-    ws.send(login_data)
-    r = json.loads(ws.recv())
-    if r['result'] == 200:
-        print('Logged in successfully as {}'.format(data['username']))
-        return ws
-    else:
-        print('Login failed: ', r['error'])
-        exit()
+on_message = handler.handle_message
+on_error = handler.handle_error
+on_close = handler.handle_close
 
+
+def on_open(ws):
+    print('Connected to {}'.format(ws.url))
+    ws.send(login_data)
+
+
+def connect():
+    ws = websocket.WebSocketApp(ws_url, header=ws_headers, on_message=on_message, on_close=on_close)
+    ws.on_open = on_open
+    ws.run_forever(host='ggs.fightcade.com', origin='https://web.fightcade.com')

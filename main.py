@@ -1,3 +1,3 @@
-import components.login as socket
+import components.connect as socket
 
-socket.connect()
+ws = socket.connect()
