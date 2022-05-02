@@ -1,5 +1,5 @@
 {
     "username": "YOUR_USERNAME",
-    "password": "YOUR_PASSWORD",
+    "userpass": "YOUR_PASSWORD",
     "fightcade_version": "Fightcade2-WIN32-v2.1.26"
 }
