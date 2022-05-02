@@ -34,7 +34,7 @@ def log():
         colors = {
             logging.CHAT: '\033[1;33m',
             logging.SUCCESS: '\033[1;32m',
-            logging.DEBUG: '\033[32m',
+            logging.DEBUG: '\033[38;5;134m',
             logging.INFO: '\033[36m',
             logging.WARNING: '\033[33m',
             logging.ERROR: '\033[31m',

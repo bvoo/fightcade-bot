@@ -34,6 +34,7 @@ on_close = handler.handle_close
 
 def on_open(ws):
     logging.info('Connected to {}'.format(ws.url))
+    logging.info('Attempting to log in with {}'.format(data['username']))
     ws.send(login_data)
 
 

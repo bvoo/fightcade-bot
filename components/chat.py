@@ -10,4 +10,3 @@ def send(ws, msg, channel, idx):
         'req': 'chat',
         'requestIdx': idx
     }))
-    return True

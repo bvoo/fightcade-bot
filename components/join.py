@@ -10,7 +10,6 @@ channels = [
 ]
 
 def join_channel(ws, channel):
-    logging.debug("Attempting to join channel {}".format(channel))
     ws.send(json.dumps({
         'away': 'false',
         'channelname': channel,
@@ -23,14 +22,21 @@ def join_channel(ws, channel):
 
 def join_channels(ws):
     # TODO: Check account for channel limit
+    logging.debug("Requesting updateuser")
     ws.send(json.dumps({
         "theme": "default", "req": "updateuser", "requestIdx": -1
     }))
+
     for channel in channels:
+        logging.debug("Requesting channel {}".format(channel))
         join_channel(ws, channel)
+
+    logging.debug("Requesting channels")
     ws.send(json.dumps({
-        "req": "channels", "all": 'true', "requestIdx": 3
+        "req": "channels", "all": 'true', "requestIdx": 1
     }))
+
+    logging.debug("Requesting filteroptions")
     ws.send(json.dumps({
-        "req": "filteroptions", "requestIdx": 4
+        "req": "filteroptions", "requestIdx": 2
     }))

@@ -7,7 +7,7 @@ with open('./important.json') as f:
     data = json.load(f)
 
 # TODO: Handle this better
-idx = 5
+idx = 3
 
 # TODO: switchcase this
 def handle_message(ws, message):
@@ -23,15 +23,21 @@ def handle_message(ws, message):
             handle_join_result(message)
 
     if message['req'] == 'chat':
-        handle_chat(message)
-
+        try:
+            if handle_chat(message) == True:
+                chat.send(ws, 'ROM', message['channelname'], idx)
+        except Exception as e:
+            logging.error('Chat failed: {} {}'.format(message, e))
     else:
         logging.debug('Received message: {}'.format(message['req']))
+    
+    if message['req'] == 'broken':
+        logging.error('Received error: broken')
 
 
 def handle_error(ws, message):
     # TODO: Handle this better
-    logging.error(message)
+    logging.error('Handle error: {}'.format(message))
 
 
 def handle_close(ws, status_code, msg):
@@ -61,6 +67,6 @@ def handle_join_result(message):
 def handle_chat(message):
     logging.chat('{}: {}'.format(message['username'], message['chat']))
     if 'ROM' in message['chat'].upper():
-        logging.debug('rom detected')
+        logging.debug('ROM detected in message')
         return True
     return False
