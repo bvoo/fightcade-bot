@@ -1,9 +1,40 @@
 import logging
 
+
+def addLoggingLevel(levelName, levelNum, methodName=None):
+    if not methodName:
+        methodName = levelName.lower()
+
+    if hasattr(logging, levelName):
+       raise AttributeError('{} already defined in logging module'.format(levelName))
+    if hasattr(logging, methodName):
+       raise AttributeError('{} already defined in logging module'.format(methodName))
+    if hasattr(logging.getLoggerClass(), methodName):
+       raise AttributeError('{} already defined in logger class'.format(methodName))
+
+    # This method was inspired by the answers to Stack Overflow post
+    # http://stackoverflow.com/q/2183233/2988730, especially
+    # http://stackoverflow.com/a/13638084/2988730
+    def logForLevel(self, message, *args, **kwargs):
+        if self.isEnabledFor(levelNum):
+            self._log(levelNum, message, args, **kwargs)
+    def logToRoot(message, *args, **kwargs):
+        logging.log(levelNum, message, *args, **kwargs)
+
+    logging.addLevelName(levelNum, levelName)
+    setattr(logging, levelName, levelNum)
+    setattr(logging.getLoggerClass(), methodName, logForLevel)
+    setattr(logging, methodName, logToRoot)
+
+
 def log():
+    addLoggingLevel('CHAT', logging.INFO - 4)
+    addLoggingLevel('SUCCESS', logging.INFO - 3)
     class handler(logging.StreamHandler):
         colors = {
-            logging.DEBUG: '\033[37m',
+            logging.CHAT: '\033[1;33m',
+            logging.SUCCESS: '\033[1;32m',
+            logging.DEBUG: '\033[32m',
             logging.INFO: '\033[36m',
             logging.WARNING: '\033[33m',
             logging.ERROR: '\033[31m',
@@ -19,13 +50,14 @@ def log():
             reset = self.reset
             return color + log + reset
 
+
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.CHAT)
     formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s', 
                                 '%m-%d-%Y %H:%M:%S')
 
     file_handler = logging.FileHandler('logs.log')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.CHAT)
     file_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)

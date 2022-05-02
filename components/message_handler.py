@@ -34,15 +34,16 @@ def handle_error(ws, message):
     logging.error(message)
 
 
-def handle_close():
-    # TODO: Reconnect
-    logging.info('Connection closed')
+def handle_close(ws, status_code, msg):
+    # TODO: Reconnect, figure out why msg and status code are None
+    logging.error('Connection closed: {}'.format(msg))
+    logging.error('Status code: {}'.format(status_code))
 
 
 def handle_login_result(message):
     try:
         if message['result'] == 200:
-            logging.info('Logged in successfully as {}'.format(message['username']))
+            logging.success('Logged in as {}'.format(message['username']))
             return True
     except:
         logging.error('Login failed: ', message['error'])
@@ -52,13 +53,13 @@ def handle_login_result(message):
 def handle_join_result(message):
     try:
         if message['result'] == 200:
-            logging.info('Joined channel successfully')
+            logging.success('Joined channel {}'.format(message['channelname']))
     except:
         logging.error('Join failed: ', message)
 
 
 def handle_chat(message):
-    logging.info('{}: {}'.format(message['username'], message['chat']))
+    logging.chat('{}: {}'.format(message['username'], message['chat']))
     if 'ROM' in message['chat'].upper():
         logging.debug('rom detected')
         return True

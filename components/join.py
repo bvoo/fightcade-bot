@@ -10,7 +10,7 @@ channels = [
 ]
 
 def join_channel(ws, channel):
-    logging.info("Attempting to join channel {}".format(channel))
+    logging.debug("Attempting to join channel {}".format(channel))
     ws.send(json.dumps({
         'away': 'false',
         'channelname': channel,
