@@ -56,7 +56,7 @@ def log():
     formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s', 
                                 '%m-%d-%Y %H:%M:%S')
 
-    file_handler = logging.FileHandler('logs.log')
+    file_handler = logging.FileHandler('logs.log', encoding='utf-8')
     file_handler.setLevel(logging.CHAT)
     file_handler.setFormatter(formatter)
 
