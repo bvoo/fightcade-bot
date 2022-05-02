@@ -1,6 +1,7 @@
 import json
 import components.join as join
 import components.chat as chat
+import logging
 
 with open('./important.json') as f:
     data = json.load(f)
@@ -25,40 +26,40 @@ def handle_message(ws, message):
         handle_chat(message)
 
     else:
-        print('Received message: ', message['req'])
+        logging.debug('Received message: {}'.format(message['req']))
 
 
 def handle_error(ws, message):
     # TODO: Handle this better
-    print('Error: ', message)
+    logging.error(message)
 
 
 def handle_close():
     # TODO: Reconnect
-    print('Connection closed')
+    logging.info('Connection closed')
 
 
 def handle_login_result(message):
     try:
         if message['result'] == 200:
-            print('Logged in successfully as {}'.format(message['username']))
+            logging.info('Logged in successfully as {}'.format(message['username']))
             return True
     except:
-        print('Login failed: ', message['error'])
+        logging.error('Login failed: ', message['error'])
         exit()
 
 
 def handle_join_result(message):
     try:
         if message['result'] == 200:
-            print('Joined channel successfully')
+            logging.info('Joined channel successfully')
     except:
-        print('Join failed: ', message)
+        logging.error('Join failed: ', message)
 
 
 def handle_chat(message):
-    print('{}: {}'.format(message['username'], message['chat']))
+    logging.info('{}: {}'.format(message['username'], message['chat']))
     if 'ROM' in message['chat'].upper():
-        print('rom detected')
+        logging.debug('rom detected')
         return True
     return False

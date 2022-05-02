@@ -1,4 +1,5 @@
 import json
+import logging
 
 # empty test channel
 # "WCW World Championship Wrestling (USA) (NES)",
@@ -9,7 +10,7 @@ channels = [
 ]
 
 def join_channel(ws, channel):
-    print("Attempting to join channel {}".format(channel))
+    logging.info("Attempting to join channel {}".format(channel))
     ws.send(json.dumps({
         'away': 'false',
         'channelname': channel,

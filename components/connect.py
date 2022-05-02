@@ -2,6 +2,7 @@ import requests
 import json
 import websocket
 import components.message_handler as handler
+import logging
 
 api_url = 'https://web.fightcade.com/api/'
 ws_url = 'wss://ggs.fightcade.com/ws/'
@@ -32,7 +33,7 @@ on_close = handler.handle_close
 
 
 def on_open(ws):
-    print('Connected to {}'.format(ws.url))
+    logging.info('Connected to {}'.format(ws.url))
     ws.send(login_data)
 
 
