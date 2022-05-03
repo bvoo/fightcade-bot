@@ -3,6 +3,7 @@ import components.join as join
 import components.chat as chat
 import logging
 import webbrowser
+import time
 
 with open('./important.json') as f:
     data = json.load(f)
@@ -28,11 +29,29 @@ def handle_message(ws, message):
             logging.info('Unusual user detected: {}. Role: {}'.format(message['user']['name'], role))
             msg = 'Unusual user detected: @{}. Role: {}'.format(message['user']['name'], role)
             chat.send(ws, msg, message['channelname'], idx)
-            with open('./users.json', 'a') as f:
-                f.write('{},{}\n'.format(message['user']['name'], role))
+            with open('./users.json', 'r') as f:
+                try:
+                    users = json.load(f)
+                except:
+                    users = {}
+            if message['user']['name'] not in users:
+                users[message['user']['name']] = role
+                with open('./users.json', 'w') as f:
+                    json.dump(users, f)
+            else:
+                if users[message['user']['name']] != role:
+                    users[message['user']['name']] = role
+                    with open('./users.json', 'w') as f:
+                        json.dump(users, f)
+
 
 
     if message['req'] == 'chat':
+        if 'result' in message:
+            return
+        if 'isspam' in message:
+            time.sleep(5)
+
         try:
             if message['username'] == data['username']:
                 return
