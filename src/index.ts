@@ -3,29 +3,32 @@ import req from '@aero/http';
 import important from '../important.json';
 import { LocationResponse, WsMessage } from './types'
 import consola from 'consola';
+import open from 'open';
 
 const apiUrl = new URL('https://web.fightcade.com/api');
 const wsUrl = new URL('wss://ggs.fightcade.com/ws/');
 
+//   "JoJo's Bizarre Adventure: Heritage for the Future / JoJo no Kimyou na Bouken: Mirai e no Isan (Japan 990913, NO CD)",
+//   "Super Street Fighter II X - grand master challenge (super street fighter 2 X 940223 Japan)",
+//   "Street Fighter III 3rd Strike: Fight for the Future (Japan 990512, NO CD)"
 const channels = [
-  "JoJo's Bizarre Adventure: Heritage for the Future / JoJo no Kimyou na Bouken: Mirai e no Isan (Japan 990913, NO CD)",
-  "Super Street Fighter II X - grand master challenge (super street fighter 2 X 940223 Japan)",
-  "Street Fighter III 3rd Strike: Fight for the Future (Japan 990512, NO CD)"
+  "WCW World Championship Wrestling (USA) (NES)",
 ];
 
 let wsHeader = {
-  'User-Agent': important.fightcade_version
+  'User-Agent': 'Fightcade2-WIN32-v2.1.26',
 }
 
 let location = '';
 let ws: WebSocket | undefined;
-let requestIdx = 0;
+let requestIdx = -1;
 let idx = 0;
 
 async function send(data: any) {
   if (ws) {
     try {
-      ws.send(JSON.stringify(data));
+      consola.debug('Sending:', data);
+      ws.send(Buffer.from(JSON.stringify(data)));
       requestIdx++;
       idx++;
     } catch (e) {
@@ -51,6 +54,7 @@ async function login(location: string) {
     req: "login",
     username,
     userpass,
+    requestIdx,
     location,
   }
   send(data);
@@ -99,7 +103,6 @@ async function run(): Promise<void> {
       consola.error('Websocket closed');
       resolve();
     })
-
   })
 }
 
@@ -114,18 +117,33 @@ async function handleMessage(msg: RawData) {
   consola.debug('Websocket message:', data.req);
 
   if (data.req === 'login') {
-    await handleLogin(data);
+      await handleLogin(data);
+      consola.info('Recieved token:', data['user']['token']);
+      
+      let uri = 'fcade://userstatus/stwlan/' + data['user']['token']; 
+    
+      open(uri);
+      consola.info('Opening:', uri);
   }
 
   if (data.req === 'join' && data.result === 200) {
     consola.success('Joined lobby:', data.channelname);
   }
 
-  if (data.req === 'chat' && data.username != important.username) {
+  consola.debug("WS DATA:", data);
+
+  if (data.req === 'chat') {
+    if (data.result) return;
     consola.info(data.username + ':', data.chat, ' | ', data.channelname);
-    if (data.chat.toLowerCase().includes('rom')) {
-      xqcS(data.channelname);
+
+    if (data.chat.startsWith('!rom')) {
+      let msg = '@{}, ROMs can be found at https://krypton.sh/'.replace('{}', data.username);
+      sendChat(data.channelname, msg);
     }
+  }
+  
+  if (data.req === 'updateuser') {
+      consola.info('updateuser')
   }
 }
 
@@ -137,8 +155,14 @@ async function handleLogin(data: any) {
   }
 }
 
-async function xqcS(channel: string) {
-  // do that
+async function sendChat(channel: string, message: string) {
+  let chatData = {
+    'channelname': channel,
+    'chat': message,
+    'req': 'chat',
+    'requestIdx': requestIdx,
+  }
+  send(chatData)
 }
 
 run().then(() => {
