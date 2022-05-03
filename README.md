@@ -16,7 +16,7 @@ WIP
 - Run `python main.py`
 
 ## To Do
-- [ ] Fix sending messages
+- [X] Fix sending messages
 - [ ] Handle Idx and RequestIdx better
 - [ ] Check account for channel limit (components/join.py)
 - [ ] Convert message handler to switch statement

@@ -57,7 +57,7 @@ def log():
                                 '%m-%d-%Y %H:%M:%S')
 
     file_handler = logging.FileHandler('logs.log', encoding='utf-8')
-    file_handler.setLevel(logging.CHAT)
+    file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)

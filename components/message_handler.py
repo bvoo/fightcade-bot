@@ -2,6 +2,7 @@ import json
 import components.join as join
 import components.chat as chat
 import logging
+import webbrowser
 
 with open('./important.json') as f:
     data = json.load(f)
@@ -23,14 +24,31 @@ def handle_message(ws, message):
             handle_join_result(message)
 
     if message['req'] == 'chat':
+        if message['chat'][0] != '!':
+            return
+
+        try:
+            if message['username'] == data['username']:
+                return
+        except:
+            pass
+
         try:
             if handle_chat(message) == True:
-                chat.send(ws, 'ROM', message['channelname'], idx)
+                msg = '@{}, ROMs can be found at https://krypton.sh/'.format(message['username'])
+                chat.send(ws, msg, message['channelname'], idx)
         except Exception as e:
             logging.error('Chat failed: {} {}'.format(message, e))
+    
     else:
         logging.debug('Received message: {}'.format(message['req']))
     
+    if message['req'] == 'updateuser':
+        logging.debug('Received token: {}'.format(message['user']['token']))
+        
+        uri = 'fcade://userstatus/stwlan/' + message['user']['token']
+        webbrowser.open(uri)
+
     if message['req'] == 'broken':
         logging.error('Received error: broken')
 
@@ -67,6 +85,5 @@ def handle_join_result(message):
 def handle_chat(message):
     logging.chat('{}: {}'.format(message['username'], message['chat']))
     if 'ROM' in message['chat'].upper():
-        logging.debug('ROM detected in message')
         return True
     return False
