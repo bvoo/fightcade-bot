@@ -22,6 +22,15 @@ def handle_message(ws, message):
     if message['req'] == 'join':
         if 'result' in message:
             handle_join_result(message)
+        elif message['user']['role'] != 1:
+            roles = {'10': 'fan', '20': 'supporter', '30': 'hardcore', '40': 'ranked', '50': 'premium', '60': 'vip', '90': 'mod', '100': 'dev'}
+            role = roles[str(message['user']['role'])]
+            logging.info('Unusual user detected: {}. Role: {}'.format(message['user']['name'], role))
+            msg = 'Unusual user detected: @{}. Role: {}'.format(message['user']['name'], role)
+            chat.send(ws, msg, message['channelname'], idx)
+            with open('./users.json', 'a') as f:
+                f.write('{},{}\n'.format(message['user']['name'], role))
+
 
     if message['req'] == 'chat':
         try:
@@ -32,8 +41,12 @@ def handle_message(ws, message):
 
         try:
             if handle_chat(message) == True:
-                msg = '@{}, ROMs can be found at https://krypton.sh/'.format(message['username'])
-                chat.send(ws, msg, message['channelname'], idx)
+                if 'ROM' in message['chat'].upper():
+                    msg = '@{}, ROMs can be found at https://krypton.sh/'.format(message['username'])
+                    chat.send(ws, msg, message['channelname'], idx)
+                if 'MORBIUS' in message['chat'].upper():
+                    msg = '@{}, #MorbiusSweep https://tenor.com/view/morbius-morbius-sweep-gif-25378327 https://cdn.discordapp.com/attachments/950667635723477042/970896014846341171/morbius.mp4'.format(message['username'])
+                    chat.send(ws, msg, message['channelname'], idx)
         except Exception as e:
             logging.error('Chat failed: {} {}'.format(message, e))
     
@@ -81,9 +94,7 @@ def handle_join_result(message):
 
 def handle_chat(message):
     logging.chat('{}: {}'.format(message['username'], message['chat']))
-    if message['chat'][0] != '!':
-            return
-    logging.info('Command: {} sent by {} in {}'.format(message['chat'], message['username'], message['channelname']))
-    if 'ROM' in message['chat'].upper():
+    if message['chat'][0] == '!':
+        logging.info('Command: {} sent by {} in {}'.format(message['chat'], message['username'], message['channelname']))
         return True
     return False
