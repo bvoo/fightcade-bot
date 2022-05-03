@@ -28,17 +28,14 @@ def handle_message(ws, message):
             if message['username'] == data['username']:
                 return
         except:
-            pass
+            return
 
         try:
             if handle_chat(message) == True:
                 msg = '@{}, ROMs can be found at https://krypton.sh/'.format(message['username'])
                 chat.send(ws, msg, message['channelname'], idx)
         except Exception as e:
-            # dont know what this error is
-            if e == 'username':
-                pass
-            logging.error('Chat failed: {} {}'.format(message, e))
+            logging.error('Chat failed: {}'.format(e))
     
     else:
         logging.debug('Received message: {}'.format(message['req']))
