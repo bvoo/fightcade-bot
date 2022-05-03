@@ -8,6 +8,8 @@ WIP
 - More soon
 
 ## How to use
+- Make sure Fightcade is installed and works
+  - Only needed if you want to send messages, otherwise you can leave this out.
 - Clone the repo
   - `git clone https://github.com/bvoo/fightcade-bot.git`
 - Edit important.json with the bot accounts user/pass, and most recent Fightcade version

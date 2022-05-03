@@ -24,9 +24,6 @@ def handle_message(ws, message):
             handle_join_result(message)
 
     if message['req'] == 'chat':
-        if message['chat'][0] != '!':
-            return
-
         try:
             if message['username'] == data['username']:
                 return
@@ -84,6 +81,9 @@ def handle_join_result(message):
 
 def handle_chat(message):
     logging.chat('{}: {}'.format(message['username'], message['chat']))
+    if message['chat'][0] != '!':
+            return
+    logging.info('Command: {} sent by {} in {}'.format(message['chat'], message['username'], message['channelname']))
     if 'ROM' in message['chat'].upper():
         return True
     return False
