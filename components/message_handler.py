@@ -24,6 +24,7 @@ def handle_message(ws, message):
         if 'result' in message:
             handle_join_result(message)
         elif message['user']['role']:
+            message['user']['name'] = message['user']['name'].lower()
             roles = {"1": "normal", '10': 'fan', '20': 'supporter', '30': 'hardcore', '40': 'ranked', '50': 'premium', '60': 'vip', '90': 'mod', '100': 'dev'}
             role = roles[str(message['user']['role'])]
             if message['user']['role'] != 1:
@@ -70,6 +71,7 @@ def handle_message(ws, message):
                     chat.send(ws, msg, message['channelname'], idx)
                 elif 'WHOIS' in message['chat'].upper():
                     target_user = message['chat'].split(' ')[1]
+                    target_user = target_user.lower()
                     with open('./users.json', 'r') as f:
                         users = json.load(f)
                     if target_user in users:
@@ -77,11 +79,35 @@ def handle_message(ws, message):
                     else:
                         msg = '{} is not in the database (Likely never logged)'.format(target_user)
                     chat.send(ws, msg, message['channelname'], idx)
+                elif 'STATS' in message['chat'].upper():
+                    with open('./users.json', 'r') as f:
+                        users = json.load(f)
+
+                    roles = [
+                        {'role': 'normal', 'count': 0},
+                        {'role': 'fan', 'count': 0},
+                        {'role': 'supporter', 'count': 0},
+                        {'role': 'hardcore', 'count': 0},
+                        {'role': 'ranked', 'count': 0},
+                        {'role': 'premium', 'count': 0},
+                        {'role': 'vip', 'count': 0},
+                        {'role': 'mod', 'count': 0},
+                        {'role': 'dev', 'count': 0}
+                    ]
+
+                    for user in users:
+                        for role in roles:
+                            if users[user] == role['role']:
+                                role['count'] += 1
+                    
+                    msg = '@{}, Here are the current stats: Users in database: {}, Normal users: {}, Fans: {}, Supporters: {}, Hardcore: {}, Ranked: {}, Premium: {}, VIP: {}, Moderators: {}, Developers: {}'.format(message['username'], len(users), roles[0]['count'], roles[1]['count'], roles[2]['count'], roles[3]['count'], roles[4]['count'], roles[5]['count'], roles[6]['count'], roles[7]['count'], roles[8]['count'])
+
+                    chat.send(ws, msg, message['channelname'], idx)
                 elif 'HELP' in message['chat'].upper():
                     msg = '@{}, My commands are as follows: !rom(s) !morbius !whois (user) !help'.format(message['username'])
                     chat.send(ws, msg, message['channelname'], idx)
                 else:
-                    msg = '@{}, !{} is an invalid command. Use !help to see my commands.'.format(message['username'], message['chat'].split(' ', 1)[0])
+                    msg = '@{}, {} is an invalid command. Use !help to see my commands.'.format(message['username'], message['chat'].split(' ', 1)[0])
                     chat.send(ws, msg, message['channelname'], idx)
         except Exception as e:
             logging.error('Chat failed: {}'.format(e))
