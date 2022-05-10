@@ -4,6 +4,7 @@ import components.chat as chat
 import logging
 import webbrowser
 import time
+import components.connect as connect
 
 with open('./important.json') as f:
     data = json.load(f)
@@ -23,29 +24,6 @@ def handle_message(ws, message):
     if message['req'] == 'join':
         if 'result' in message:
             handle_join_result(message)
-        elif message['user']['role']:
-            message['user']['name'] = message['user']['name'].lower()
-            roles = {"1": "normal", '10': 'fan', '20': 'supporter', '30': 'hardcore', '40': 'ranked', '50': 'premium', '60': 'vip', '90': 'mod', '100': 'dev'}
-            role = roles[str(message['user']['role'])]
-            if message['user']['role'] != 1:
-                logging.info('Unusual user detected: {}. Role: {}'.format(message['user']['name'], role))
-                msg = 'Unusual user detected: @{}. Role: {}'.format(message['user']['name'], role)
-                chat.send(ws, msg, message['channelname'], idx)
-            with open('./users.json', 'r') as f:
-                try:
-                    users = json.load(f)
-                except:
-                    users = {}
-            if message['user']['name'] not in users:
-                users[message['user']['name']] = role
-                with open('./users.json', 'w') as f:
-                    json.dump(users, f)
-            else:
-                if users[message['user']['name']] != role:
-                    users[message['user']['name']] = role
-                    with open('./users.json', 'w') as f:
-                        json.dump(users, f)
-
 
 
     if message['req'] == 'chat':
@@ -69,30 +47,30 @@ def handle_message(ws, message):
                 elif 'MORBIUS' in message['chat'].upper():
                     msg = '@{}, #MorbiusSweep https://tenor.com/view/morbius-morbius-sweep-gif-25378327 https://cdn.discordapp.com/attachments/950667635723477042/970896014846341171/morbius.mp4'.format(message['username'])
                     chat.send(ws, msg, message['channelname'], idx)
-                elif 'WHOIS' in message['chat'].upper():
-                    target_user = message['chat'].split(' ')[1]
-                    target_user = target_user.lower()
-                    with open('./users.json', 'r') as f:
-                        users = json.load(f)
-                    if target_user in users:
-                        msg = '@{}, @{}\'s role is: {}'.format(message['username'], target_user, users[target_user])
-                    else:
-                        msg = '{} is not in the database (Likely never logged)'.format(target_user)
-                    chat.send(ws, msg, message['channelname'], idx)
+                # elif 'WHOIS' in message['chat'].upper():
+                #     target_user = message['chat'].split(' ')[1]
+                #     target_user = target_user.lower()
+                #     with open('./users.json', 'r') as f:
+                #         users = json.load(f)
+                #     if target_user in users:
+                #         msg = '@{}, @{}\'s role is: {}'.format(message['username'], target_user, users[target_user])
+                #     else:
+                #         msg = '{} is not in the database (Likely never logged)'.format(target_user)
+                #     chat.send(ws, msg, message['channelname'], idx)
                 elif 'STATS' in message['chat'].upper():
                     with open('./users.json', 'r') as f:
                         users = json.load(f)
 
                     roles = [
-                        {'role': 'normal', 'count': 0},
-                        {'role': 'fan', 'count': 0},
-                        {'role': 'supporter', 'count': 0},
-                        {'role': 'hardcore', 'count': 0},
-                        {'role': 'ranked', 'count': 0},
-                        {'role': 'premium', 'count': 0},
-                        {'role': 'vip', 'count': 0},
-                        {'role': 'mod', 'count': 0},
-                        {'role': 'dev', 'count': 0}
+                        {'role': 'normal', 'count': 0, 'cost': 0},
+                        {'role': 'fan', 'count': 0, 'cost': 2},
+                        {'role': 'supporter', 'count': 0, 'cost': 5},
+                        {'role': 'hardcore', 'count': 0, 'cost': 10},
+                        {'role': 'ranked', 'count': 0, 'cost': 15},
+                        {'role': 'premium', 'count': 0, 'cost': 20},
+                        {'role': 'vip', 'count': 0, 'cost': 100},
+                        {'role': 'mod', 'count': 0, 'cost': 0},
+                        {'role': 'dev', 'count': 0, 'cost': 0}
                     ]
 
                     for user in users:
@@ -100,11 +78,31 @@ def handle_message(ws, message):
                             if users[user] == role['role']:
                                 role['count'] += 1
                     
-                    msg = '@{}, Here are the current stats: Users in database: {}, Normal users: {}, Fans: {}, Supporters: {}, Hardcore: {}, Ranked: {}, Premium: {}, VIP: {}, Moderators: {}, Developers: {}'.format(message['username'], len(users), roles[0]['count'], roles[1]['count'], roles[2]['count'], roles[3]['count'], roles[4]['count'], roles[5]['count'], roles[6]['count'], roles[7]['count'], roles[8]['count'])
+                    cost = 0
+                    for role in roles:
+                        cost += role['cost'] * role['count']
+
+                    # patrons = fan + supporter + hardcore + ranked + premium + vip count
+                    patrons = roles[1]['count'] + roles[2]['count'] + roles[3]['count'] + roles[4]['count'] + roles[5]['count'] + roles[6]['count']
+                    total_patrons = 684
+                    missing_patrons = total_patrons - patrons
+                    min_cost = cost + missing_patrons * 2
+                    max_cost = cost + missing_patrons * 100
+
+                    avg_cost = round(cost / patrons, 2)
+                    likely_cost = round(cost + missing_patrons * avg_cost, 2)
+
+                    msg = '@{}, Here are the logged stats as of 2022/05/03: Users in database: {}, Normal users: {}, Fans: {}, Supporters: {}, Hardcore: {}, Ranked: {}, Premium: {}, VIP: {}, Moderators: {}, Developers: {}, `TOTAL KNOWN REVENUE PER MONTH`: `${} USD` (Missing {} patrons) (Minimum ${} USD revenue, Maximum ${} USD revenue. Likely ${} USD based on an average price of ${} USD.)'.format(message['username'], len(users), roles[0]['count'], roles[1]['count'], roles[2]['count'], roles[3]['count'], roles[4]['count'], roles[5]['count'], roles[6]['count'], roles[7]['count'], roles[8]['count'], cost, missing_patrons, min_cost, max_cost, likely_cost, avg_cost)
 
                     chat.send(ws, msg, message['channelname'], idx)
                 elif 'HELP' in message['chat'].upper():
-                    msg = '@{}, My commands are as follows: !rom(s) !morbius !whois (user) !help'.format(message['username'])
+                    msg = '@{}, My commands are as follows: !rom(s) !morbius !help !stats'.format(message['username'])
+                    chat.send(ws, msg, message['channelname'], idx)
+                elif 'SEAN' in message['chat'].upper():
+                    msg = '@{}, https://www.justnopoint.com/zweifuss/colorswap.php?pcolorstring=SeanPalette.bin&pcolornum=13&pname=sean/sean-taunt.gif'.format(message['username'])
+                    chat.send(ws, msg, message['channelname'], idx)
+                elif 'YOINKY' in message['chat'].upper():
+                    msg = '@{}, https://tenor.com/view/yoinky-sploinky-yoinky-sploinky-cat-black-cat-gif-21171863'.format(message['username'])
                     chat.send(ws, msg, message['channelname'], idx)
                 else:
                     msg = '@{}, {} is an invalid command. Use !help to see my commands.'.format(message['username'], message['chat'].split(' ', 1)[0])
@@ -134,6 +132,8 @@ def handle_close(ws, status_code, msg):
     # TODO: Reconnect, figure out why msg and status code are None
     logging.error('Connection closed: {}'.format(msg))
     logging.error('Status code: {}'.format(status_code))
+    connect.connect()
+
 
 
 def handle_login_result(message):
