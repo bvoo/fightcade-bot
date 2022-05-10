@@ -2,6 +2,7 @@ import WebSocket, { RawData } from 'ws';
 import req from '@aero/http';
 import consola from 'consola';
 import handleMessage from './MessageHandler';
+import handleCommand from './CommandHandler';
 
 const apiUrl = new URL('https://web.fightcade.com/api');
 const wsUrl = new URL('wss://ggs.fightcade.com/ws/');
@@ -29,18 +30,20 @@ class User {
             let location = await this.getLocation();
 
             consola.info(`${this.username} | Got location`);
-            
-            let timeout = true;
 
-            setTimeout(() => {
-                if (timeout) {
-                    consola.error(`${this.username} | Connection timeout`);
-                    this.run(ws);
-                }
-            }, 15000);
+            
+            // TODO: Figure out why it sometimes doesnt conect
+            // let timeout = true;
+
+            // setTimeout(() => {
+            //     if (timeout) {
+            //         consola.error(`${this.username} | Connection timeout`);
+            //         this.run(ws);
+            //     }
+            // }, 15000);
 
             ws.on('open', () => {
-                timeout = false;
+                // timeout = false;
                 consola.success(`${this.username} | Connected to websocket`);
                 this.login(ws, location);
             });
@@ -61,12 +64,15 @@ class User {
                     if (r.req == 'getLobbies') {
                         this.getLobbies(ws);
                     }
+                    if (r.req == 'command') {
+                        this.handleCommand(ws, data);
+                    }
                 }
             });
 
             ws.on('close', () => {
-                consola.error(`${this.username} | Websocket closed`);
-                resolve();
+                consola.error(`${this.username} | Websocket closed. Attempting to reconnect.`);
+                this.run(ws);
             })
         })
     }
@@ -130,6 +136,26 @@ class User {
             this.send(ws, data);
             consola.debug(`${this.username} | Joining lobby ${channels[i].name}`);
         }
+    }
+
+    public async handleCommand(ws: WebSocket, data: any) {
+        let cmd = data;
+        cmd.chat = cmd.chat.substring(1);
+        let r = await handleCommand(data, this.username);
+        if (r) {
+            r = `${data.username}, ${r}`;
+            this.sendChat(ws, r, data.channelname);
+        }
+    }
+
+    public async sendChat(ws: WebSocket, chat: string, channel: string) {
+        let data = {
+            channelname: channel,
+            chat: chat,
+            req: "chat",
+            requestIdx: this.requestIdx
+        }
+        this.send(ws, data);
     }
 }
 

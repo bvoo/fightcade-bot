@@ -1,7 +1,6 @@
 import consola from 'consola';
 import open from 'open';
 
-
 async function handleMessage(username: string, message: any) {
     let res = {
         req: "",
@@ -54,7 +53,11 @@ async function handleMessage(username: string, message: any) {
             }
         case 'chat':
             if (!message.username) return;
-            consola.info(`CHAT | ${message.username} | ${message.chat} | ${message.channelname} `);
+            // consola.info(`CHAT | ${message.username} | ${message.chat} | ${message.channelname} `);
+            if (message.chat.startsWith('!')) {
+                res.req = 'command';
+                return res;                
+            }
         case 'quarkstats':
         case 'challenge':
         case 'cancel':
@@ -65,6 +68,7 @@ async function handleMessage(username: string, message: any) {
         case 'leave':
         case 'stwlan':
         case 'chaway':
+        case 'chnoaway':
         case 'updaterank':
             break;
         default:
