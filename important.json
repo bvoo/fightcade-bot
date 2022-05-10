@@ -1,5 +1,12 @@
 {
-    "username": "YOUR_USERNAME",
-    "userpass": "YOUR_PASSWORD",
-    "fightcade_version": "Fightcade2-WIN32-v2.1.26"
+    "accounts": [
+        {
+            "username": "user1",
+            "userpass": "password1"
+        },
+        {
+            "username": "user2",
+            "userpass": "password2"
+        }
+    ]
 }
